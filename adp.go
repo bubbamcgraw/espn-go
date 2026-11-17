@@ -37,6 +37,15 @@ var teamIDByAbbreviation = func() map[string]int {
 	return m
 }()
 
+// TeamAbbreviations returns every NFL team abbreviation TeamID knows.
+func TeamAbbreviations() []string {
+	out := make([]string, 0, len(proTeamAbbreviations))
+	for _, abbr := range proTeamAbbreviations {
+		out = append(out, abbr)
+	}
+	return out
+}
+
 // TeamID looks up ESPN's internal numeric team ID for a standard NFL team
 // abbreviation (e.g. "SF") — for GetTeam/GetTeamSchedule, which key off
 // that numeric ID rather than the abbreviation everything else in this
