@@ -6,8 +6,6 @@ type AthleteResponse struct {
 
 type Athlete struct {
 	ID            string     `json:"id"`
-	UID           string     `json:"uid"`
-	GUID          string     `json:"guid"`
 	FirstName     string     `json:"firstName"`
 	LastName      string     `json:"lastName"`
 	FullName      string     `json:"fullName"`

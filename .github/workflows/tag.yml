@@ -1,0 +1,48 @@
+# Tags every push to main with the next semver so ff-api can `go get` it.
+#   any commit since the last tag starting "feat"  -> minor (v0.1.0 -> v0.2.0)
+#   otherwise                                      -> patch (v0.1.0 -> v0.1.1)
+# Majors stay manual: v2+ of a Go module needs a /v2 module path anyway.
+name: tag
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency: tag
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - run: go test -short ./...
+
+      - name: Bump and push tag
+        run: |
+          last=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo v0.0.0)
+          if [ "$(git rev-list -n1 "$last" 2>/dev/null)" = "$(git rev-parse HEAD)" ]; then
+            echo "HEAD already tagged $last"; exit 0
+          fi
+
+          range="$last..HEAD"
+          [ "$last" = v0.0.0 ] && range=HEAD
+          IFS=. read -r major minor patch <<< "${last#v}"
+          if git log --format=%s "$range" | grep -qE '^feat(\(.+\))?!?:?'; then
+            next="v$major.$((minor + 1)).0"
+          else
+            next="v$major.$minor.$((patch + 1))"
+          fi
+
+          git tag "$next"
+          git push origin "$next"
+          echo "tagged $next (was $last)" >> "$GITHUB_STEP_SUMMARY"
